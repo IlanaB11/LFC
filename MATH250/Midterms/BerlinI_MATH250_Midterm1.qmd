@@ -1,0 +1,193 @@
+---
+title: "BerlinI MATH250 Midterm1"
+format: html
+author: "Ilana Berlin"
+date: "2 October 2025"
+embed-resources: true
+---
+```{r}
+#| label: setup 
+#| message: false
+
+library(tidyverse)
+library(gt)
+library(readxl)
+
+coffee <- read_excel("coffee.xlsx")
+gss <- read_csv("gss.csv")
+```
+
+### Problem 1
+> Write a short paragraph (approx 3-5 sentences) with background information on this data set. Who collected it and how did it come to be in its present form? What can you tell me that isn’t obvious from a quick glance at the Tidy Tuesday Github? You should NOT need to include any code for this part.
+
+This dataset contains information about Arabica and Robusta coffee beans and their quality. The data comes from the Coffee Quality Institute's 2018 January review. The beans were graded according to their Quality Coffee System, by Q grade certified reviewers. The `total_cup_points` comes from the Q score, an average of the total score from 3 graders/cuppers. Coffee with a Q score above 80 become a Q Coffee&trade;. The data was cleaned by James LeDoux, a previous Buzzfeed data scientist who currently works as a machine learning engineer for CashApp. 
+
+### Problem 2
+> This data set includes one very obvious outlier in the `flavor` variable. Identify this observation, remove it from the set, then create an attractive plot showing the distribution of `flavor` ratings in this set. Why was removing the outlier a good idea here?
+
+> Save the resulting data frame as `coffee2` and use it for all future problems.
+
+```{r}
+#| label: Idenify flavor outlier
+#| fig-alt: a boxplot of showing the distibution of flavor
+
+coffee %>% 
+  ggplot(aes(y = flavor)) +
+  geom_boxplot(fill = "#967259") + # coffee colored
+  theme_minimal() + 
+  labs(x = NULL, 
+       y = "Flavor", 
+       title = "Distibution of Coffee Flavor",
+       subtitle = "Including Outlier", 
+       caption = "Source: Tidy Tuesday 2020-07-07") + 
+  scale_x_discrete(breaks = NULL)
+```
+There is a very obvious `flavor` outlier where flavor is 0. Further inspection reveals that this datapoint has a score of zero across all scored categories. It seems like this point represents an unscored sample and is not a complete entry so excluding the outlier is a good idea. The sample was recived in April 28th, 2017 and has no primary defects, and only 2 secondary defects so why the sample is not scored should be further looked into.
+
+```{r}
+#|label: Remove flavor outlier
+coffee2 <- coffee %>% 
+  filter(flavor != 0)
+```
+
+```{r}
+#| label: Plot flavor distribution
+#| fig-alt: A histogram showing the distribution of flavor
+
+coffee2 %>% 
+  ggplot(aes(x = flavor)) + 
+  geom_histogram(binwidth = 0.2, 
+                 fill = "#967259", 
+                 color = "black") + 
+  theme_minimal() + 
+  labs(x = "Flavor", 
+       y = "Frequency", 
+       title = "Flavor Distribution Histogram",
+       subtitle = "Excluding Outlier")
+```
+
+
+### Problem 3
+> Obtain a smaller data set that includes only the variables `farm_name`, `country_of_origin`, `color`, `flavor`, and all those with the word “number” in their name. Remove observations with fewer than 300 bags tested and keep only those are not green in color. Order the results by highest flavor rating. If there are ties, order these reverse-alphabetically. Glimpse your results.
+
+```{r}
+#| label: Subsect dataset
+
+coffee_subset <- coffee2 %>% 
+  select(farm_name, 
+         country_of_origin, 
+         color, 
+         flavor, 
+         contains("number")) %>% 
+  filter(number_of_bags > 300, 
+         color != "Green") %>% 
+  arrange(desc(flavor), desc(farm_name))
+
+coffee_subset %>% 
+  glimpse()
+```
+### Problem 4
+> Recreate the following plot as closely as possible.
+
+```{r}
+#| label: recreate coffee boxplot
+#| fig-alt: a boxplot showing the flavor scores of coffee with or without a listed variety
+#| dpi: 250
+#| out-width: 85%
+
+coffee2 %>% 
+  ggplot(aes(y = is.na(variety), 
+             x = flavor, 
+             fill = is.na(variety))) +
+  geom_boxplot(show.legend = FALSE) +
+  scale_fill_brewer(palette = "Dark2") +
+  theme_minimal()+
+  labs(x = "Varity missing?", 
+       y = "Flavor rating", 
+       title = "Does mystery coffee taste better?", 
+       caption = "Source: Tidy Tuesday 2020-07-07")
+
+```
+### Problem 5
+> Obtain a table showing the five most common countries of origin in `coffee2`. Include their average flavor ratings as well as their frequencies. Add a reasonable title to your table (you’ll need to learn how to do this).
+
+```{r}
+#| label: Most common origin countries
+
+coffee2 %>% 
+  group_by(country_of_origin) %>% 
+  summarize(Count = n(), 
+            Ave_flavor = round(mean(flavor), 2)) %>% 
+  arrange(desc(Count)) %>% 
+  head(n = 5) %>% 
+  gt() %>%
+  tab_header(title = "Top 5 Coffee Producing Countries")
+  
+```
+
+### Problem 6
+> Obtain an attractive and informative plot showing the popularity of the various processing methods used in the countries identified in the last problem. Are there any apparent difference between nations here?
+
+> Note: you do not need to deeply research the missing values in the processing_method variable, but you should make an intelligent choice about how to treat them in your plot. Write a very short explanation of your choice.
+
+```{r}
+#| label: Processing methods in producing countries
+#| fig-alt: A filled bar chart colored by the frequency of processing methods used by the top five coffee producing countries in 2018
+
+coffee2 %>% 
+  filter(country_of_origin %in%
+           c("Mexico", 
+             "Colombia", 
+             "Guatemala", 
+             "Brazil", 
+             "Taiwan")) %>% 
+  group_by(country_of_origin) %>% 
+  ggplot(aes(x = country_of_origin, 
+             fill = processing_method)) +
+  geom_bar(position = "fill") + 
+  theme_minimal() + 
+  scale_fill_brewer(palette = "Dark2", 
+                    na.value = "lightgrey") + 
+  labs(x = "Country of Origin", 
+       y = "Frequency", 
+       fill = "Processing Method", 
+       title = "Processing Method of Top 5 Coffee Producing Countries")
+
+```
+
+4 out of the 5 top top coffee producing companies primarily use the `Washed/Wet` processing method, with the exception of Brazil which primary uses the `Natural/Dry` method. `NA` values could indicate unknown processing method or that beans were unprocessed, either way I felt it was important to keep track of so I left them in the graph. The color close to the background color keeps them visible while also making them distinct from the bright colors in the `Dark2` color palette. 
+
+### Problem 7
+> This problem deals with the `gss` data set, available on Moodle, which includes partial information from the General Social Survey, 2000-2014. Use this data to recreate the following plots as closely as possible.
+
+```{r}
+#| label: Recreate gss plot 
+#| fig-alt: a line plot showing the average TV hours over the years of people with different marital statuses 
+#| message: false
+#| dpi: 300
+#| out-width: 85%
+
+gss %>% 
+  group_by(year, marital) %>%
+  filter(marital != "No answer") %>% 
+  summarize(ave_tv = mean(tvhours)) %>%
+  ggplot(aes(x = year, 
+             y = ave_tv, 
+             group = marital, 
+             color = fct_relevel(marital, 
+                                 "Never married", 
+                                 "Separated",
+                                 "Divorced",
+                                 "Widowed", 
+                                 "Married"))) + #I had help from Claude to find this
+  geom_line(linewidth = 0.65) + 
+  geom_point(size = 2) + 
+  theme_minimal() + 
+  scale_fill_brewer(palette = "Dark2") +
+  labs(x = "Year of survey", 
+       y = "Average TV per day (hours)", 
+       color = "Marital status") 
+  
+```
+
+

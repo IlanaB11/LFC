@@ -1,0 +1,82 @@
+---
+title: "HW3_dplyr_basics"
+format: html
+author: Ilana Berlin
+date: 19 Sept 2025
+embed-resources: true
+---
+```{r}
+#| label: Load Libraries
+#| message: false
+library(tidyverse)
+library(nycflights13)
+library(gt)
+```
+
+## Problem 1
+```{r}
+#| label: Q1
+flights_sm <- select(flights, 
+                     dest, 
+                     contains('dep'), 
+                     contains('arr_'))
+glimpse(flights_sm)
+```
+## Problem 2
+### a
+
+```{r}
+#|label: Q2a
+flights_sm %>% 
+  filter(dest == "BOS"|
+         dest == "ATL") %>% 
+  glimpse()
+```
+### b
+```{r}
+#|label: Q2b
+flights_sm %>% 
+  filter(dep_delay >= 60 ,
+         arr_delay < 0) %>% 
+  gt() %>% 
+  tab_header(
+    title = "Flights with Late Departure but Early Arrival"
+  ) %>% 
+  tab_footnote(footnote = "RITA, Bureau of transportation statistics")
+
+```
+### c
+```{r}
+#|label: Q2c
+flights_sm %>% 
+  filter(between(arr_time,
+                 100,
+                 700)) %>% 
+  glimpse()
+```
+## Problem 3
+### a
+
+```{r}
+#|label: Q3a
+flights_sm %>% 
+  arrange(desc(dep_delay), # can also use -dep_delay or -arr_delay
+          arr_delay) %>% 
+ glimpse()
+```
+### b
+```{r}
+#|label: Q3b
+flights_sm %>% 
+  arrange(desc(is.na(dep_time))) %>% #can also use ! operator 
+  glimpse()
+```
+## Problem 4
+```{r}
+#|label: Q4
+flights_sm %>% 
+  mutate(dep_delay_vs_arr_delay = dep_delay - arr_delay, 
+         gained_time = (sched_dep_time - sched_arr_time == dep_time - arr_time))%>%
+  glimpse()
+```
+

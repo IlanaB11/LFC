@@ -1,0 +1,175 @@
+---
+title: "BerlinI_HW3_Wrangling_practice"
+format: html
+author: Ilana Berlin
+date: 26 Sept 2025
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(readxl)
+library(gt)
+
+astronauts <-read_excel("astronauts.xlsx")
+scooby <-read_excel("scooby.xlsx")
+```
+
+### Problem 1
+
+Obtain rankings of the five astronauts with the most total EVA (extra-vehicular activity)
+hours. Generate an attractive horizontal bar chart of the results.
+```{r}
+#| label: Q1 EVA Table
+
+astronauts_eva <- astronauts %>% 
+  group_by(name) %>% #assumes that no two astronauts have the same name 
+  summarize(eva_total = sum(eva_hrs_mission)) %>% 
+  slice_max(order_by = eva_total, 
+            n = 5)
+
+astronauts_eva %>% 
+  gt() %>% 
+  tab_header(title = "Highest EVA Hours",
+             subtitle = "Top 5 as of 2019")
+```
+```{r}
+#| label: Q1 EVA Bar
+#| fig-alt: A bar graph displaying five astronauts with the highest number of EVA hours as of 2019
+
+astronauts_eva %>% ggplot(aes(x = eva_total, 
+             y  = fct_reorder(name, eva_total),
+             fill = name
+             )) + 
+  geom_col(show.legend = FALSE) + 
+  labs(y = "Astronaut", 
+       x = "Total EVA Hours", 
+       fill = none, 
+       title = "Astronauts with Top 5 Highest EVA Hours", 
+       subtitle = "as of 2019") + 
+  theme_minimal() + 
+  scale_fill_brewer(palette = "Dark2") 
+
+```
+
+
+### Problem 2
+What are the top five occupations of astronauts? Compute the minimum, median, and maximum ages of astronauts in each of these roles. Also include the total number of times astronauts
+have had these occupations.
+
+```{r}
+#| label: Q2 Occupation Summary
+
+astronauts %>% 
+  mutate(age = year_of_mission - year_of_birth, 
+         occupation = tolower(occupation)) %>% #can also use `case_when` for a general is-else
+  group_by(occupation) %>% 
+  summarise(count = n(), 
+            min_age = min(age), 
+            median_age = median(age), 
+            max_age = max(age))%>% 
+  arrange(desc(count)) %>% 
+  head(n = 5) %>% 
+  gt() %>% 
+  tab_header(title = "Most Common Astronaut Occupations")
+
+```
+
+
+### Problem 3
+Are civilians less likely to put in EVA hours than military members? Has this changed over
+time? Obtain a single data frame showing total EVA hours for each year and military/civilian
+status. Rather than printing the entire thing in your document, create a neat table showing
+the first 10 rows only. Use the complete table to generate a relevant line plot.
+
+```{r}
+#| label: Q3 Military Vs Civilian EVA Table 
+#| message: false
+
+mil_civ_eva <- astronauts %>% 
+  group_by(year_of_mission, 
+           military_civilian
+           ) %>% 
+  summarise(total_eva_hours = sum(eva_hrs_mission)) %>% 
+  ungroup() #get warning if result still has group in it 
+
+mil_civ_eva %>% 
+  head(n = 10) %>% 
+  gt() %>% 
+    tab_header(title = "Military and Civilian EVA Hours", 
+               subtitle = "In the first 10 years")
+
+```
+
+```{r}
+#| label: Q3 Military Vs Civilian EVA Line Plot
+#| fig-alt: a line plot showing how civilian and military EVA time has changed over the years till 2019.
+
+mil_civ_eva %>% 
+  ggplot(aes(x = year_of_mission, 
+             y = total_eva_hours, 
+             group = military_civilian, 
+             color = military_civilian)) +
+  geom_line(linewidth = 1, 
+            alpha = 0.75) + 
+  scale_color_brewer(palette = "Dark2") + 
+  theme_minimal() + 
+  labs(x = "Year of Mission", 
+       y = "Total EVA Hours", 
+       color = "Personnel Type") + 
+   theme(
+    legend.position = "inside",
+    legend.position.inside = c(.05,
+                               .95),
+    legend.justification = c("left", 
+                             "top"),
+    legend.box.background = element_rect(color="white"))
+
+```
+
+
+### Problem 4
+Revisit the scooby data set. Explore the relationship between setting_terrain and one or
+more other variables in the set until you find something that might be interesting. Include a
+plot, a numerical summary (like a table), and a short paragraph explaining your findings.
+
+```{r}
+#| label: Q4 scooby setting table
+scooby_setting_count <- scooby %>% 
+  group_by(setting_terrain) %>% 
+  summarize(count = n(), 
+            ave_rating = mean(imdb,
+                              na.rm = TRUE))
+scooby_setting_count %>% 
+  arrange(count) %>% 
+  gt() %>% 
+  tab_header(title = "Average Rating of Scooby-Doo Settings and Their Frequency", 
+             subtitle = "From Least to Most Frequent")
+```
+
+
+```{r}
+#| label: Q4 scooby setting graph
+#| fig-alt: a scatter plot showing the average rating of each setting used in Scooby-Doo with points sized by how frequently the setting is used. 
+
+scooby_setting_count %>% 
+  ggplot(aes(y = setting_terrain, 
+             x = ave_rating, 
+             size = count)) + 
+  geom_vline(aes(xintercept = mean(ave_rating), 
+                 ), 
+             linewidth = 1) +
+  geom_point(color = "blue") + 
+  labs(x = "Average Rating", 
+       y = "Setting", 
+       size = "Setting Frequency", 
+       title = "Average Rating of Scooby Doo Settings") +
+  theme_minimal()+
+   scale_radius(range = c(2,10))
+
+```
+Setting that are more common have an average rating closer to the average rating of all Scooby-Doo episodes. For less common setting, high score or low scores can have a larger affect on the average then they can in setting with a higher count. 15 data points were missing imdb scores which should be looked into. 
+

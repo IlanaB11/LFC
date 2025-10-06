@@ -1,0 +1,83 @@
+---
+title: "HW2_ggplotpractice"
+format: html
+author: "Ilana Berlin"
+date: "8 Septemeber 2025"
+embed-resources: true
+---
+```{r}
+#| message: false
+library(tidyverse)
+library(modeldata)
+```
+
+## Problem 1
+
+
+```{r}
+ggplot(attrition, aes(x = MonthlyIncome, 
+                      y = Education, 
+                      fill = Education)) + 
+  geom_boxplot(lwd = 0.75, show.legend = FALSE) + 
+  labs(x = 'Monthly income', 
+       y = 'Education', 
+       title = 'Learn to earn') + 
+  scale_fill_brewer(palette = "Dark2") 
+
+```
+
+
+## Problem 2
+
+```{r}
+ggplot(attrition, aes(x = Age)) + 
+  geom_histogram(fill = 'lightgreen', 
+                 colour = 'darkgreen', 
+                 bins = 10, 
+                 lwd = 1) +
+  theme_minimal()
+```
+
+## Problem 3
+
+The `viridis` palette is made to be good for colorblindness. 
+
+```{r}
+ggplot(attrition, aes(x = JobSatisfaction, 
+                      fill = Attrition)) + 
+  geom_bar() + 
+  labs(x = 'Job Satisfaction', 
+       y = 'Frequency') + 
+  scale_fill_viridis_d() +
+  theme_minimal()
+  
+```
+
+## Problem 4 
+
+```{r}
+ggplot(attrition, aes(x = JobSatisfaction, 
+                      fill = Attrition)) + 
+  geom_bar(position="fill") + 
+  labs(fill = 'Job Satisfaction', 
+       y = 'Frequency') + 
+  scale_fill_viridis_d() +
+  theme_minimal()
+  
+```
+## Problem 5 
+```{r}
+#| message: false
+ggplot(attrition, aes(x = MonthlyIncome, 
+                      fill = EducationField)) + 
+  geom_histogram(colour = NA) + 
+  facet_wrap(~ EducationField,
+             ncol = 2) + 
+  theme_minimal() + 
+  theme(legend.position = "none") +
+  scale_fill_brewer(palette = "Dark2") +
+  labs(x = 'Monthly income', 
+       title = 'Income by field', 
+       caption = 'Source: IBM Watson Analytics Lab')
+```
+
