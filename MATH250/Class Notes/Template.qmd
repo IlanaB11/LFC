@@ -1,0 +1,14 @@
+---
+title: "Class notes 11 21"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(readxl)
+```
+

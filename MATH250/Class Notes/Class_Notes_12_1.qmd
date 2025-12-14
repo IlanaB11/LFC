@@ -1,0 +1,120 @@
+---
+title: "Class notes 12 1"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(readxl)
+library(ellmer)
+```
+
+## Multiple Regression - parallel slopes model 
+
+```{r}
+penguins %>% 
+  ggplot(aes(x = bill_dep, 
+             y = bill_len, 
+             color = species)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm') + 
+  scale_color_brewer(palette = "Dark2")
+```
+Lets get a parallel slopes model 
+
+```{r}
+model_par <- lm(bill_len ~ bill_dep + species, 
+                data = penguins)
+
+summary(model_par)
+```
+The model is $\text{bill_len } = 13.2 + 1.4(\text{ bill_dep}) + 9.9(\text{Chinstrap}) + 13.4(\text{Gentoo}) $. Chinstrap and Gentoo are boolean values, 0 if false, and 1 if true. This model assumes that the slope is the same for all species and the intercept (vertical shift) is different. 
+
+### Note on p-values
+
+In the last example we did not set a hypothesis. We **cannot** claim statistical significance here however we can use them to draw conclusions about the variables. This is fine also long as you do not indicate that they have statistical significance. You are choosing the parameters of the model to fit the data so of course it is going to have statistical significance. Also keep in mind that the p-values in multiple regression is very dependent on other variables in the model. 
+
+What if we actually want an inference? What hypothesis do these p-values test? Lets look at Gentoo species. 
+
+$H_0$ Knowing if a penguin is Gentoo provides a better fit than not knowing __When bill depth and if it is gentoo are already known__ 
+
+A final warning about using p-values in this way. A p-value measures how likely a type one error (false positive) is when the null hypothesis is true. Looking at multiple p-values the probabilities add up (compound)
+
+
+```{r}
+library(modeldata)
+
+crickets %>% 
+  ggplot(aes (x = temp, 
+              y = rate, 
+              color = species)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm', 
+              se = FALSE)
+
+model_small <- lm(rate ~ temp + species, 
+                  data = crickets)
+
+summary(model_small)
+```
+From the plot it seems plausible that the slopes are different. How do we get the model to take this into account? 
+
+$rate = \beta _0 + \beta_1(temp) + \beta_2 (Niveus) + \beta_3(Niveus)(temp)$
+
+The last temp adjusts the slope based on if the species is Niveus. 
+
+```{r}
+model_lrg <- lm(rate ~ temp * species, # change addition to multiplication
+                data = crickets)
+
+summary(model_lrg)
+```
+
+The term `temp:species0. niveus` is the new term. However, this is over fitting the model. The effect of the variable is diluted between the two components so the p-values are telling us that we can take out one of the components but that is not necessarily true. 
+
+### Tool calling with gemini
+
+AI is usually pretty bad at doing typical things computers are good at like math. So lets make it use a calculator
+
+```{r}
+#| include: false
+
+Sys.setenv(
+  GEMINI_API_KEY = "AIzaSyCtyfK1syWoeVjcniLc747LAfOeBwQCHZU")
+
+```
+
+
+```{r}
+
+my_gemini <- chat_google_gemini(system_prompt = "you are a friendly but terse R assistant who prefers to give short answers in a simple tidyverse format")
+
+
+my_gemini$chat("what is 2387 * 108430, give me the answer")
+
+```
+```{r}
+ 2387 * 108430
+```
+Gemini give R code if not prompted for the specific ansewer. When asked for a specific answer it gives an incorrect answer. Let write function to multiple number and give it to gemini 
+
+```{r}
+multiply <- function(x, y){
+  x * y
+}
+
+multiply_nums <- tool(
+  fun = multiply, 
+  description = "Get the product of two numbers by multiplying them", 
+  arguments = list(x = type_number("the first factor"), 
+                   y = type_number("the second factor"))
+)
+
+my_gemini$register_tool(multiply_nums)
+```
+
+

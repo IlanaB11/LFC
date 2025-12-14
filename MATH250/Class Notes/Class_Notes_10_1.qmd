@@ -1,0 +1,33 @@
+---
+title: "Class Notes 10_1"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(readxl)
+scooby <- read_excel("scooby.xlsx")
+```
+
+## Revisiting Scooby 
+
+When looking at `setting_terrain` vs another variable make sure that you consider `NA`s
+
+```{r}
+#| label: Count NAs
+sum(is.na(scooby$setting_terrain))
+sum(is.na(scooby$arrested))
+```
+144 out of 549 rows of `arrested` are `NA`. Why? 
+
+```{r}
+#| label: Observe arrested NAs
+missing_arrested <- scooby %>% 
+  filter(is.na(arrested))
+```
+
+Most of the missing values come from specific shows. Some like Laff-A-Lymics did not have a villain to arrest. 

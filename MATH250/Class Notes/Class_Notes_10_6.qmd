@@ -1,0 +1,72 @@
+---
+title: "Class Notes 10/6"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+commute <- data.frame(day = c(1, 2, 3, 4, 5),
+                      to = c(8, 7, 9, 9, 7),
+                      from = c(11, 6, 13, 10, 9))
+```
+
+We want this: 
+
+```{r}
+#| eval: false
+#| include: false
+commute %>% 
+  ggplot(aes(x = day,
+             y = duration, 
+             group = direction))
+```
+
+However the duration and direction are not actually specified. This is an __untidy__ data set. 
+
+In a __tidy__ dataset: 
+- Each row is an observation 
+- Each column is a variable 
+- Each data set only includes one type of observation
+
+In the real world data sets are not actually tidy. The `commute` data set has a common issue: it is in wide format where values are in column names. In this case the `direction` is columns so columns do not all represent variables. 
+
+We want a data set that has columns `day`, `direction`, and `duration`. This can be done by reshaping using `pivot_longer`.
+
+`pivot_longer` requires three arguments: 
+- the problem columns that are values of a variable (in this case `to` and `from`)
+- the names of new columns where the old column names will be stored (in this case `direction`)
+- The name of the new column where the values in the problem column will be stores (in this case `duration`)
+
+```{r}
+tidy_commute <- commute %>% 
+  pivot_longer(cols = to:from, 
+               names_to = "direction", 
+               values_to = "duration")
+
+```
+
+```{r}
+tidy_commute %>% 
+  ggplot(aes(x = day, 
+             y = duration, 
+             color = direction)) + 
+  geom_line()
+```
+### More on untidy data
+
+The `tidyr` package which loads with `tidyverse` contains multiple versions of the same data set. `table1` is the tidy version. 
+
+```{r}
+table1
+  
+```
+Alternatively 
+
+```{r}
+table2
+```
+

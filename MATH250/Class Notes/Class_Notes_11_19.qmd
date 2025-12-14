@@ -1,0 +1,27 @@
+---
+title: "Class Notes 11_19"
+format: html
+embed-resources: true
+author: Ilana Berlin
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+```
+
+### Leverage, Discrepancy and Influence
+
+Observations with unusual y values are outliers. They have high discrepancy.  Observations with unusual x values can affect the fit of the model. They have high leverage. Points with high influence can substantially affect the fit of the model. A point with high discrepancy and high leverage can have high influence. 
+
+Discrepancy is measured using residuals. Leverage can be measured using hat values. Influence can be measured using Cook's distance. 
+
+### $R^2$
+
+$R^2$ is the coefficient of determination. It measures the spread of observation. Closer to 1 means tighter packed, closer to 0 means spread out. 
+
+$R^2 = 1-\frac{\sum{(y_i-\hat{y}_1)^2}}{\sum{(y_i-\bar{y})^2}}$
+
+It measures how much of the variability in y can be explained by variability in x. So it will be lower for y with high variability. A high $R^2$ is not necessarily good and a low $R^2$ is not necessarily bad. 

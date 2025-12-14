@@ -1,0 +1,66 @@
+---
+title: "Class notes 10 24"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+```
+
+### Lists 
+
+A list is a generalization of a data frame (a collection of columns). Their higher degree of freedom makes them a little more complicated. Extract elements from a list using `$` or double brackets. 
+
+```{r}
+#| label: make list
+
+my_list <- list(nums = 1:5, 
+                vars = c("area", 
+                         "peri", 
+                         "shape", 
+                         "perm"), 
+                data = rock) 
+str(my_list) #structure
+my_list$nums
+my_list[["vars"]]
+```
+### Repition 
+Loops exist in R however we will not be using them. Google then if you want to. Instead we usually apply a specfic function to every element of a vector, data frame, or list. 
+
+`map` (and its friends) can be used to apply things to every element of a list. `map` gives back a list but we can specify the type we want back using `map_x` for example `map_chr` of charactes, `map_int` for integers, `map_dbl` for doubles, ect. use `?map` for more information. 
+```{r}
+#| label: list mutation
+
+typeof(my_list) # only returns list
+
+my_list %>% 
+  map(typeof)
+
+```
+General rule: If you are doing the same thing more than 3 times, consider automating it. 
+
+Not everything we want to do is already a function. For example keep the four lowest values of each column in a data set. We can write our own functions for this. 
+
+### Writing functions
+
+Specified what is getting passed in and then tell R what the function should do with that was passed into it. R functions default to returning the last line. 
+
+
+```{r}
+#| label: lowest column values
+
+keep_smallest <- function(nums){
+  sort(nums)[1:4] # sort and keep the first 4
+}
+
+keep_smallest(rock$area)
+
+rock %>% 
+  map(keep_smallest)
+
+```
+

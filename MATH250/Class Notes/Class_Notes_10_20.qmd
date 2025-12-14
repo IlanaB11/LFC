@@ -1,0 +1,67 @@
+---
+title: "Class notes 10.20"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(gt)
+
+msleep1 <- data.frame(name = c("Cheetah", 
+                               "Dog"),
+                      genus = c("Acinonyx",
+                                "Canis"))
+msleep2 <- data.frame(name = c("Cow",
+                               "Goat"),
+                      genus = c("Bos",
+                                "Capri"))
+msleep_vore <- data.frame(name = c("Cheetah", 
+                                   "Cow",
+                                   "Goat",
+                                   "Brown bat"),
+                          vore = c("carni",
+                                   "herbi",
+                                   "herbi",
+                                   "insecti"))
+```
+
+### Combining set: new observations with the same variables
+
+Data needs to be tidy before this is done, rows and observations should be the same. If there variable names match up then we can just copy/paste with `bind_rows()` Keep in mind which data set is the primary one that is being piped into commands. 
+
+```{r}
+msleep_genus <- msleep1 %>% 
+  bind_rows(msleep2, 
+            .id = "researcher")
+
+```
+### Combining set: same observations with different variables
+
+add `vore` information from `msleep_vore` to `msleep_genus`. Try to match one column to another and they add the rest of the variables. Do this with `left_join`, based on SQL commands. 
+
+```{r}
+msleep <- msleep_genus %>% #set to modify
+  left_join(msleep_vore, # set to be added 
+            by = "name") # column used as key 
+msleep
+  
+```
+
+Order matters 
+
+```{r}
+msleep <- msleep_vore %>% #set to modify
+  left_join(msleep_genus, # set to be added 
+            by = "name") # column used as key 
+
+msleep
+  
+```
+Leaving out the `by` does a _natural join_ that joins by all matching columns however this will also output a message. This make it very easy for things to go wrong. 
+
+We can also use another data set to filter the first data set. For example only keeping observation that appear in the second set is something that comes up a fair amount. This can be done using `semi_join`. Or that don't appear using `anti_join`. These are _filter joins_. 
+

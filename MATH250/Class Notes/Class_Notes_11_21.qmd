@@ -1,0 +1,74 @@
+---
+title: "Class notes 11 21"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(readxl)
+library(broom)
+curve <- read_csv('curved.csv')
+```
+
+### Linear Regression
+
+The `curved` data set is not a great candidate for linear regression but lets do one anyway. 
+
+```{r}
+curve %>% 
+  ggplot(aes(x = x, 
+             y = y)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm', 
+              se = FALSE)
+```
+Let's actually get the equation and the p-value for this line even though this doesn't look like a great fit. 
+
+```{r}
+model <- lm(y ~ x, 
+            data = curve)
+
+summary(model)
+```
+To check the assumption of the model make a residual plot. In order to do this well use the function `broom::augment`. 
+
+```{r}
+curved_aug <- augment(model)
+glimpse(curved_aug)
+```
+The residual shows the differance between the observed and fitted values. Lets make plot of the residuals vs the fitted values 
+
+```{r}
+curved_aug %>% 
+  ggplot(aes(x = .fitted, 
+             y = .resid)) + 
+  geom_point()
+```
+
+We can clearly see a pattern. If linear regression is appropriate it would be a patternless cloud. 
+
+### Multiple Regression
+
+Let's return to the `parenting` dataset. 
+
+```{r}
+parenting <- read_excel('parenting.xlsx')
+glimpse(parenting)
+```
+Question: Do we get a better model if we consider both `dan.sleep` and `baby.sleep` in explaining `dan.grump`
+
+```{r}
+model_large <- lm(dan.grump ~ baby.sleep + dan.sleep, 
+                  data = parenting)
+```
+
+The form of this model is $y = \beta_0 + \beta_1x_1 + \beta_2x_2$ where $x_1$ is `baby.sleep` and $x_2$ is `dan.sleep`. If `baby.sleep` changes by 1 then `dan.grump` changes by $\beta_1$. R with fill in the $\beta$ values. 
+
+```{r}
+summary(model_large)
+```
+The model here is $y=125.97 + 0.1x_1 - 8.95x_2$ 

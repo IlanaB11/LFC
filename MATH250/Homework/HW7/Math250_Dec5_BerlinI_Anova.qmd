@@ -1,0 +1,145 @@
+---
+title: "Math250 Dec 5 BerlinI Anova HW"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(readxl)
+library(broom)
+```
+
+### Problem 1 
+
+> Does this sample data provide evidence that sepal width is dependent on species in the population from which this sample is drawn? Test at significance level $ \alpha = 0.05 $ 
+
+We want to know if the knowing the species of an iris will give us any information about it's sepal width. The null hypothesis $H_0$ suggests that the mean `Sepal.Width` is the same for all species. The alternative hypothesis $H_a$ suggests that the mean `Sepal.Width` is not the same for all species of iris. 
+
+```{r}
+#| label: sepal width boxplot
+#| fig-alt: a boxplot showing the distribution of sepal widths by iris species
+
+iris %>% 
+  ggplot(aes(x = Species, 
+             y = Sepal.Width, 
+             fill = Species)) +
+  geom_boxplot(show.legend = FALSE) + 
+  theme_minimal() + 
+  scale_fill_brewer(palette = "Dark2") + 
+  labs(y = "Sepal Width", 
+       title = "Iris sepal width by species")
+```
+```{r}
+#| label: species sepal width anova
+
+sepal_anova <- aov(Sepal.Width ~ Species, 
+                   data = iris)
+
+summary(sepal_anova)
+```
+A p-values of $2 \times 10 ^{-16}$ gives evidence against the null hypothesis. This suggests that the mean sepal width is not the same for all species so there is evidence that sepal width is not independent from species.  
+
+
+### Problem 2 
+
+> Follow up on problem 1 by comparing mean sepal widths pairwise across different species using the post-hoc test covered in class.
+
+```{r}
+#| label: species sepal width post hoc 
+
+TukeyHSD(sepal_anova)
+```
+The Tukey Honest Standard Differences Test suggests that there is good evidence that the species versicolor and setosa, as well as the species virginica and setosa, have different mean sepal width. There is also evidence that the species virginica and versicolor have different mean sepal widths, however is is slightly weaker. 
+
+### Problem 3 
+
+> Is sepal width a statisticaly significant explainer of petal width? Follow all best-practices from class.
+
+To check is the sepal width explains petal width, we will check if they have a linear relationship. The null$H_0$ is that there is no linear relationship between the variables `Sepal.Width` and `Petal.Width`. The alternative hypothesis is that $H_a$ there is a linear relationship between the two variables. 
+
+```{r}
+#| label: sepal width vs petal width 
+#| fig-alt: scatterplot of sepal width vs pedal width of irises with a linear line of best fit
+#| message: false
+
+iris %>% 
+  ggplot(aes(x = Sepal.Width, 
+             y = Petal.Width)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm', 
+              se = FALSE) +
+  theme_minimal() + 
+  labs(x = "Sepal Width", 
+       y = "Petal Width", 
+       title = "Iris Sepal Width VS Iris Sepal Width")
+```
+```{r}
+#| label: sepal width explaining petal width 
+
+sepal_pedal_model <- lm(Petal.Width ~ Sepal.Width, 
+                        data = iris)
+
+summary(sepal_pedal_model)
+```
+
+The linear model `Petal.Width = 2.1569 - 0.06403(Sepal.Width)` has a p-value of $4.03 \times 10^{-6}$. The small p-values provides evidence against the null hypothesis. This suggests that sepal width is a statistically significant ex-plainer of petal width. 
+
+
+### Problem 4 
+
+> Construct a parallel-slopes model explaining petal width with sepal width and species. Write the equation of the model, making sure the meanings of your variables are clear. Also include a plot.
+
+```{r}
+#| label: parallel slopes graph
+#| fig-alt: a scatter plot of petal width and sepal with of irises colored by species with a line of best fit for each species
+#| message: false
+
+iris %>% 
+  ggplot(aes(x = Sepal.Width, 
+             y = Petal.Width, 
+             color = Species)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm', 
+              se = FALSE) +
+  theme_minimal() + 
+  labs(x = "Sepal Width", 
+       y = "Petal Width", 
+       title = "Iris Sepal Width VS Iris Sepal Width")
+
+```
+```{r}
+#| label: parallel slopes model 
+
+model_par <- lm(Petal.Width ~ Sepal.Width + Species, 
+                data = iris)
+
+summary(model_par)
+```
+The model predicts that `Petal.Width $=-0.72577 + 0.28348(\text{Sepal.Width}) + 1.22653(\text{isVersicolor}) + 1.90870(\text{isVirginica})$. 
+
+### Problem 5 
+
+> Construct an attractive residual plot for the model in the last problem. Comment on any patterns that you observe.
+
+```{r}
+#| label: residual plot
+#| fig-alt: a scatter plot showing the residuals of the parallel slopes model predicting iris petal width with sepal width and species
+
+model_par_aug <- augment(model_par)
+
+model_par_aug %>%
+  ggplot(aes(x = .fitted, 
+             y = .resid, 
+             color = Species)) + 
+  geom_point() +
+  theme_minimal()+ 
+  labs(x = "Fitted Petal Width", 
+       y = "Residual", 
+       title = "Parallel Model Residuals")
+```
+

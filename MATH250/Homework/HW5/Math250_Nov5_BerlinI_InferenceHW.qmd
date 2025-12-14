@@ -1,0 +1,72 @@
+---
+title: "Math250 HW6 Inference, etc"
+author: "Ilana Berlin" 
+date: "November 5th" 
+format: html
+embed-resources: true
+code-fold: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(ISLR2)
+```
+
+### Problem 1 
+> The first two problems in this set refer to the ISLR2::Carseats set, which includes simulated sample data for 400 stores selling a particular brand of child carseat. We view this data as a simple random sample from a larger population. Does this data provide evidence against the company’s claim that the average price of their own seats is $110? Follow all best practices from class, including hypotheses, a relevant visualization, and a conclusion in non-technical language.
+
+Null hypothesis: $H: \mu = 100$
+
+Alternative: $H_a: \mu \ne 100$ 
+
+```{r}
+#| label: prices histogram 
+#| fig-alt: a histogram showing the distribution of car seat prices
+
+Carseats %>% 
+  ggplot(aes(x = Price)) +
+  geom_histogram(bins = 25) + 
+  geom_vline(xintercept = 100, 
+             color = "red") + 
+  theme_minimal()
+```
+```{r}
+#| label: prices t test
+Carseats$Price %>% 
+  t.test(mu = 100)
+```
+The average price of car seats is not $100 because if it was then it would be incredibly rare to get data like ours. 
+
+### Problem 2
+> Compute a level 90% confidence interval for the mean competitor price in the population from which this sample is drawn. What is the sample mean? What is the margin of error?
+
+```{r}
+#| label: competitor price
+
+Carseats$CompPrice %>% 
+  t.test(conf.level = .90)
+
+```
+The sample mean is \$124.98 $\pm$ 1.2591. 
+
+### Problem 3
+> Watch my video on contingency tables. Use these tools to create a table with counts of penguin species and home islands in the penguins set. Include marginal counts in your table.
+
+```{r}
+#| label: contigency table
+
+t <- table(penguins$species, 
+      penguins$island)
+addmargins(t)
+```
+
+
+### Problem 4
+> Push your solutions to this set to your GitHub page, including both the Quarto source and the rendered html. Use file names of the form, “math250_nov5_yourname.” Provide a clickable link to the repository on your personal GitHub where these files can be found.
+
+[Ilana Berlin Github - Math250 Sandbox](https://github.com/IlanaB11/Math250_GithubSandbox)
+

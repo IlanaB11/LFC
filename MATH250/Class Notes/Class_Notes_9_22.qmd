@@ -1,0 +1,68 @@
+---
+title: "Class Notes 9_22"
+format: html
+embed-resources: true
+author: Ilana Berlin
+date: 22 Sept 2025
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+```
+
+### More on `mutate` 
+
+Change the unit of `bill_len` and `bill_dep` to inches. Multiply by 0.03937008. Create new columns - do not override the old values. Also remove capitalizations to make everything consitent
+
+```{r}
+#| label: Convert mm to in
+
+penguins_nonmetric <- penguins %>% 
+  mutate(bill_len_in = bill_len * 0.03937008, 
+         bill_dep_in = bill_dep * 0.03937008, 
+         species = tolower(species), 
+         island = tolower(island))
+
+```
+
+### Grouped Summaries 
+
+To start, check out `summarize` (`summarise` also works)
+
+```{r}
+#| label: Summarize Total
+
+penguins %>% 
+  summarise(bill_len_ave = mean(bill_len, 
+                 na.rm = TRUE ), 
+            bill_len_sd = sd(bill_len,
+                             na.rm = TRUE)) 
+```
+Use `summarize` to get this data for each different species. The most direct way to do this is using the `.by` command. 
+
+
+```{r}
+#| label: Summarize by species
+
+penguins %>% 
+  summarise(bill_len_ave = mean(bill_len, 
+                 na.rm = TRUE ), 
+            bill_len_sd = sd(bill_len,
+                             na.rm = TRUE), 
+            .by = species) 
+```
+You can also use this older but less elegant way. 
+
+```{r}
+#| label: Summarize by species - old
+
+penguins %>% 
+  group_by(species) %>% 
+  summarise(bill_len_ave = mean(bill_len, 
+                 na.rm = TRUE ), 
+            bill_len_sd = sd(bill_len,
+                             na.rm = TRUE))
+```

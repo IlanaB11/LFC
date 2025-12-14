@@ -1,0 +1,49 @@
+---
+title: "Class_Notes_09_12"
+format: html
+author: "Ilana Berlin"
+date: "12 September 2025"
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+library(tidyverse)
+```
+
+To remove the legend from a plot put `show.legend = FALSE` in the geom. 
+
+## Subsetting Data with `Filter`
+
+Make a subset from the penguins data of just Adelies using `filter`
+
+```{r}
+#| include: false
+filter(penguines, 
+       species == 'Adelie')
+```
+
+Filter numerically ex/ by size
+
+```{r}
+penguines_sm <- filter(penguins, 
+                       body_mass > 3600)
+glimpse(penguines_sm)
+```
+Filter by multiple conditions
+```{r}
+penguines_sm <- filter(penguins, 
+                       body_mass > 3600, 
+                       species == "Adelie")
+glimpse(penguines_sm)
+
+```
+Add `|` for or
+```{r}
+penguines_sm <- filter(penguins, 
+                       body_mass > 3600, 
+                       species == "Adelie" |
+                         species == "Chinstrap")
+```
+

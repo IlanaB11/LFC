@@ -1,0 +1,112 @@
+---
+title: "Class Notes 11_10"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(readxl)
+```
+
+##Anova 
+
+$H_o$: all group means are the same Ex/$\mu_1 = \mu_2 =...\mu_n$
+
+$H_a$: not all group means are the same Ex/at least one $\mu_i \ne \mu_j$
+
+If we reject the null the only things we can assume is that the variables are dependent, we do not get to say how they are dependent. 
+
+Idea: compare variability of observed group means $\bar{x}_1, \bar{x}_2...\bar{x}_n$ with the variability within the groups. Compute F-statistic and get a p-value. A low p-value represents evidence against $H_o$
+
+To do an Anova: 
+- state hypothesis 
+- Visualize data (boxplot)
+- run test using `aov()`
+- state conclusion in ordinary human language
+- consider which groups might be different 
+
+Assumptions for ANOVA: 
+- observations are independent of one and other 
+- within each group, that quantitative variable has a normal distribution
+- variance in each group is equal
+
+
+### ANOVA in 8 minutes 
+
+Tests if a quantitative is independant from qualitative (same across groups)
+
+```{r}
+trout <-read_excel("trout.xlsx")
+glimpse(trout)
+
+```
+
+Do trout at different locations have different hemoglobin levels? 
+
+$H_0$: the population means of `Hemo` are the same for all locations 
+$H_a$: the populations means of `Hemo` are __NOT__ the same for all locations
+
+```{r}
+trout <- trout %>% 
+  mutate(Location = as.factor(Location)) #convert location from a double to a char
+
+trout %>% 
+  ggplot(aes(x = Location, 
+             y = Hemo)) + 
+  geom_boxplot() + 
+  geom_jitter()
+```
+The bars show the median not a mean, however they are not that different. It looks like location one is different but lets actually run the test. The command is `aov()` which stands for analysis of varaince. It is asking if `Location` gives any information about `Hemo`. 
+
+```{r}
+model <- aov(Hemo ~ Location, 
+    data = trout)
+
+summary(model)
+```
+All we are really looking at is the p values (`Pr(>F)`). The small value indicated good evidance agains the null so we can conclude that location _does_ give information about `Hemo`. Trout at different locations do seem to have different levels of hemoglobin. (Note: we are not claiming that they are different at all locations, just that they are not the same at all locations)
+
+This does __not__ say anything about which groups might be different. To do that we need to do some pairwise comparisons. __DO NOT USE THE DATA TO MAKE A HYPOTHESIS__, this will lead to meaningless results. However, if we just directly run pairwise comparisons therre is a high probability of getting at lest one small p-value by chance, even if there really isn't a differeance (False positive). 
+
+### The Tukey post-hoc test 
+
+post-hoc: after the fact 
+
+To correctly follow up a postive ANOVA use a _Tukey Honest Standard Differences Test_ which does a pairwise comparision for each pair of groups and corrects for the fact that there are multiple tests. 
+
+```{r}
+TukeyHSD(model)
+```
+95% confidence interval: 5% chance there is a false positive in at least 1 comparison. p-adjust is inflated from just comparing the two groups to account for multiple testing.
+
+There is evidance that 1 and 2 are different. There is weaker evidance that 1 and 3 are different. There is insuffiencent evidance that 1 and 4 are different. 
+
+Ideally do power anaylsis to pick sample size before any testing to make false postives rare. 
+
+### Example: Penguines
+
+$H_0$: bill length is the same for all 3 species
+$H_a$: bill length is not the same for all 3 species 
+
+```{r}
+penguins %>% 
+  ggplot(aes(x = bill_len, 
+             y = species))+ 
+  geom_boxplot()
+```
+```{r}
+p_model <- aov(bill_len ~ species, 
+               data = penguins)
+summary(p_model)
+```
+There is very strong evidance ($p < 4\times10^{-16}$) that `bill_len` is not independant from `species`. 
+
+```{r}
+TukeyHSD(p_model)
+```
+There is very stong evidance that Adelie are different from Chinstrap and Adelie are different from Gentoo. There is less strong evidance that Gentoo and Chinstrap are different. 
+

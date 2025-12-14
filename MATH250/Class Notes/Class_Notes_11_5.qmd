@@ -1,0 +1,89 @@
+---
+title: "Class notes 11_05"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+```
+
+A college states that they have 50% freshman, 30% soph, 10% jr, and 10% sen. This is an assumption of a categorical variable. How do we test this claim? (`t.test` is for quantitative)
+
+$H_o$=these proportions are correct 
+$H_a$=these proportions are NOT correct 
+
+in a sample of $n=65$ student we count 28 fresh, 24 soph 9 jr, and 4 sen. Our data is not exactly in these proportions but is it close enough? We expected to get 32.5 fresh, 19.5 soph, 6.5 jr, and 6.5 sen. 
+
+We compute a chi-squared statistic $\chi^2=\sum\frac{(Observed-Expected)^2}{Expected}$ for each group. 
+
+This has a $\chi^2$ distribution with $k-1$ degrees of freedom where $k$ = the number of categories. 
+
+The overall term for what we are doing is a __goodness of fit test__. We will get a p-value that says how likely it is to go data like ours assuming the null hypothesis is true (similar to a t.test)
+
+```{r}
+#| label: goodness of fit test
+O <- c(28, 24, 9, 4) #our observations
+h_null <- c(.5, .3, .1, .1) #reported ratios
+
+chisq.test(O, 
+           p = h_null) #make sure to have p = 
+
+```
+If the null hypothesis is true then the data like this will occur 30% of the time. We have insufficent evidance to reject the null/this datat is consistent with the null. This does not confirm the claim but it does not provide evidance against it. 
+
+
+## Chi-squared goodness of fit test
+
+The $\chi^2$ test is used for a single catagorical varible. for example using the `diamonds` dataset with a sample size of 250. Is this consistent with the claim that all diamond colors are equally probable. 
+
+```{r}
+set.seed(0)
+d_sample <- diamonds %>% 
+  slice_sample(n = 250)
+```
+
+$H_0$: All colors have equal proportions in the population 
+
+$H_a$: All color do __not__ have equal proportions 
+
+Get a visuallization (bar chart is usually best and easiest)
+
+```{r}
+
+d_sample %>% 
+  ggplot(aes(x = color))+
+  geom_bar()
+
+```
+
+It looks like the proportions are not the same but this is possibly due to the sampling. Let's look at the counts for the different factor levels 
+
+```{r}
+t <- table (d_sample$color)
+
+t
+```
+```{r}
+p_null <- rep(1/7, times = 7) # repeat 1/7 7 times without manually typing it out
+p_null
+```
+```{r}
+chisq.test(t, 
+           p = p_null)
+```
+
+The p-values measures how consistent our data is with the null. Lower p values respresent stronger evidance against the null. A p value of $5.9 \times 10^{-5}$ means that there is strong evidance against the null.   
+
+## ANOVA 
+
+Analysis of variance (ANOVA) tests if a quantitaive variable and catagorical variable are independant (does it give information about the other). Ex/ does dosage impact disease preseance. 
+
+$H_o$: $\mu_1 = \mu_2 = ... \mu_n$ the mean of each is the same 
+
+$H_a$ : $ \mu_i \ne \mu_j$ for some $i \ne j$ At least on pair is different 
+
+All we can conclude is that they are equal or they probably are not. We cannot conclude that one this is better or not. 

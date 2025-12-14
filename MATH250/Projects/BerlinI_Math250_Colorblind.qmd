@@ -1,0 +1,229 @@
+---
+title: "Differences in Color Perception"
+author: "Ilana Berlin"
+format: html
+code-fold: true
+date: 22 Sept 2025
+embed-resources: true
+---
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(gt)
+survey_results <- read_csv("color_survey.csv")
+```
+
+```{r}
+#| label: count colorblind nas
+#| eval: false
+#| include: false
+
+survey_results %>% 
+ filter(is.na(colorblind)) %>% 
+  summarise(n())
+```
+
+```{r}
+#| label: filter results
+filtered_results <- survey_results %>% 
+  filter(!is.na(colorblind)) %>% 
+  mutate(colorblind = case_when( #convert to actual values 
+   colorblind == 1 ~ "Colorblind", 
+   colorblind == 0 ~ "Trichromatic"), 
+  y_chromosome = case_when(
+    y_chromosome == 1 ~ "Yes",
+    y_chromosome == 0 ~ "No"
+  )) %>% 
+  select(user_id, 
+         response, 
+         y_chromosome, 
+         colorblind, 
+         color) %>% 
+  arrange(user_id)
+
+```
+
+
+
+Humans percive color via red (L-), blue (S-), and green (M-) cones in the eye.^[[Nickerson. C: The Trichromatic Theory of Color Vision _SimplePsychology_ __2023__](https://www.simplypsychology.org/what-is-the-trichromatic-theory-of-color-vision.html)] The function of these color receptors impact how people perceive colors. People with trichromatic vision have all three receptors functioning and people who are colorblind have a lack of or reduced use of one or more receptors. Comparing differences in `colorblind` from the 2010 xkcd color survey can give some insight into differences in color perception.^[[Randall: Color Survey Results _xkcd_ __2010__](https://blog.xkcd.com/2010/05/03/color-survey-results/)]
+
+3,550 users neglected to report the state of their vision (if they were colorblind or not) therefore, 76,212 responses from these users had to be excluded. In total there were 2,636 respondants who were colorblind and 65,503 who had trichromatic vision. 
+
+```{r}
+#| label: vision count
+filtered_results %>% group_by(user_id) %>% 
+  summarize("Vision" = first(colorblind)) %>% 
+  ungroup() %>% 
+  group_by(Vision) %>% 
+  summarise(Count = n()) %>% 
+  gt() %>% 
+  tab_header("Number of Respondants by Vision Type")
+```
+
+
+### Color Perception is Genetic
+
+Genetic mutations can change the functions of these cones. People with a `Y chromosome` are more likely to have colorblindness because they only need their one X chromosome to have a mutation in order for it to express.^[[Causes of Color Vision Deficiency _National eye Institute_ __2025__](https://www.nei.nih.gov/learn-about-eye-health/eye-conditions-and-diseases/color-blindness/causes-color-vision-deficiency)] This is reflected in the data from the color survey. 
+
+```{r}
+#| label: sex comparsion 
+#| fig-alt: A bar chart showing the how it is more common for people with a Y chromosome to be colorblind
+#| message: false
+
+filtered_results %>% 
+  group_by(user_id) %>% 
+  summarise(colorblind = first(colorblind), 
+            y_chromosome = first(y_chromosome)) %>% 
+  ggplot(aes(x = colorblind,
+            fill = y_chromosome)) +
+  geom_bar(position = "fill") + 
+  labs(x = "Vision", 
+       y = "Frequency", 
+       title = "Chromosome Distribution of Vision Type", 
+       fill = "Y Chromosome") + 
+  scale_fill_brewer(palette = "Dark2", 
+                    na.value = "grey50")
+ 
+```
+
+### Seeing Fewer Colors Makes Colors More Repetative
+
+Colorblindness can limit the number of colors a person can perceive.^[[What Do Color Blind People See? _Enchroma_](https://enchroma.com/blogs/beyond-color/how-color-blind-see)] This increases the number of times that people put common responses. The top five most common responses capture a larger percent of the responses from colorblind respondents than trichromatic respondents.
+
+
+```{r}
+#| label: count response
+#| eval: false
+#| include: false
+
+filtered_results %>% 
+  group_by(colorblind) %>% 
+  summarise(n())
+```
+
+```{r}
+#| label: common responses
+#| message: false
+filtered_results %>% 
+  select(colorblind, 
+         Response = response) %>% 
+  group_by(colorblind, 
+           Response) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+   pivot_wider(names_from = colorblind,
+              values_from = count,
+              values_fill = 0) %>% 
+  head(n = 5) %>% 
+  mutate(Trichromatic = round((Trichromatic / 1654306	) * 100, 2), #divide by the total number of trichromatic responses 
+         Colorblind = round((Colorblind / 66418) * 100, 2)) %>% #divide by the total number of colorblind responses 
+  gt() %>% 
+  tab_header("Percent of Five Most Common Responses")
+```
+> This is not completly accurate as values may be unaccounted for due to spelling errors, capitaliztion, and additional words and symbols. 
+
+The table below provides an example of the responses from trichromatic respondent `104` and colorblind respondent `218`, the first people I found within each vision group who looked at exactly 10 colors. While `blue` appears multiple times for both respondents, `blue` and `green`, two of the top most common responses, appear more frequently from the colorblind respondent.
+
+```{r}
+#| label: find an example
+#| eval: false
+#| include: false
+
+filtered_results %>% 
+  filter(colorblind == "Trichromatic") %>% 
+  group_by(user_id) %>% 
+  summarise(n())
+
+filtered_results %>% 
+  filter(colorblind == "Colorblind") %>% 
+  group_by(user_id) %>% 
+  summarise(n())
+```
+
+```{r}
+#| label: color table
+#| fig-alt: a table showing the 10 responses and colors from a trichromatic and colorblind respondent
+
+example_results <- filtered_results %>% 
+  filter(user_id == 104 |
+           user_id == 218) %>% 
+  select(colorblind, 
+         "Response" = response,
+         "Color" = color) %>% 
+  arrange(colorblind) %>% 
+  group_by(colorblind) %>% 
+  arrange(Response) %>% 
+  mutate(row = row_number()) %>% 
+  ungroup() %>% 
+    pivot_wider(names_from = colorblind,
+              values_from = c(Response, Color),
+              names_sep = "_") 
+
+example_results %>%
+  select(contains("Trichromatic"), 
+         contains("Colorblind")) %>% 
+  gt() %>% 
+  data_color(columns = Color_Trichromatic, #with the help of Google and Claude
+    target_columns = c(Response_Trichromatic, Color_Trichromatic), 
+    fn = identity) %>% 
+  data_color(columns = Color_Colorblind,             
+    target_columns = c(Response_Colorblind, Color_Colorblind), 
+    fn = identity) %>% 
+  tab_header(title = "Sample of Colors and responses from trichromatic and colorblind respondant")
+```
+
+
+### Colorblindness did not Limit Survey Participation
+
+There were more respondents with trichromatic vision than colorblindness, which reflects the general population. Despite the lower number of colorblind respondent, colorblindness did not deter participation and people who were colorblind answered the survey just as many times as people with trichromatic vision.
+
+```{r}
+#| label: response count
+#| fig-alt: an area graph showing a log scale of how many time a respondant named a color
+#| message: false
+
+filtered_results %>% 
+  group_by(user_id) %>% 
+  mutate(response_num = row_number()) %>% 
+  ungroup() %>% 
+  group_by(colorblind, 
+           response_num) %>% 
+  summarise(count = n()) %>% 
+  ggplot(aes(x = response_num, 
+             y = count, 
+             fill = colorblind)) + 
+  facet_wrap(~ colorblind) + 
+  geom_area(show.legend = FALSE) +
+  scale_y_log10() + 
+  theme_minimal() + 
+  labs(title = "Response Count by Vision Type", 
+       x = "Response Number", 
+       y = "Count (Log Scale)") +
+  scale_fill_brewer(palette = "Dark2")
+```
+
+Respondents with trichromatic vision blamed their limited participation on colorblindness more often then ones that actually were colorblind. They cited colorblindness more frequently when struggling to come up with a response for a color. 
+
+```{r}
+#| label: who called colorblind
+#| message: false
+#| warning: false
+filtered_results %>% 
+  filter(str_detect(response, "colorblind") & #found from textbook
+           !str_detect(response, "INSERT")) %>% 
+  select(Response = response, 
+         colorblind, 
+         Color = color) %>% 
+  group_by(colorblind) %>%
+  summarise(Response, 
+            Color) %>% 
+  arrange(Color) %>% 
+  gt(row_group_as_column = TRUE) %>% 
+  data_color(columns = Color, 
+    target_columns = c(Response, Color), 
+    fn = identity) %>% 
+  tab_header("Responses including 'colorblind'")
+```
+

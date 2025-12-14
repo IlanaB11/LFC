@@ -1,0 +1,50 @@
+---
+title: "Class Notes 9_29"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+```
+
+## Missing Data
+
+Broadly speaking there are 3 different kinds of missing data 
+
+1) __missing completely at random__: A random sample of observations are missing or deleted with no pattern. This is often what is assumed, both by humans and by coding languages, and is how the `slice_sample` function works (randomly selected a samples of rows). 
+
+2) __missing at random__: There is correlation with other variables but still some randomness in the missing variables, guesses (imputations) about the missing variables can be made with other data. 
+
+3) __missing not at random__: There are real world reasons for why data is missing that may not be obvious at first but can be very important.
+
+### Example with the `msleep` dataset
+
+This dataset contains information about the sleep cycles of different types of mammals. Lets look at all the animals that have `NAs` in the conversation status.
+
+```{r}
+conserve_na <- msleep %>% 
+  filter(is.na(conservation))
+
+conserve_na %>% 
+  gt()
+
+```
+Some googling tells us that some of these species do not have a conservation status, or at least they did not at the time the set was made. We can replace these NAs with a value such as "not endangered". A useful command for this is `tidyr::replace_na`. 
+
+What about `sleep_rem`? Is the missingness of this varaible related to other variables in this set? We can answer this by making some plots? Lets just check the missingness vs `vore`, in practice it would be better to check vs every varaible of interest. 
+
+```{r}
+missing_sleep_rem <- msleep %>% 
+  mutate(sleep_rem_na = is.na(sleep_rem))
+
+missing_sleep_rem %>% 
+  ggplot(aes(fill = sleep_rem_na, 
+            x = vore)) + 
+  geom_bar(position = "fill")
+```
+Carnivores are more likely to be missing data. 
+

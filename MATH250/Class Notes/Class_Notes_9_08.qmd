@@ -1,0 +1,44 @@
+---
+title: "Class_Notes_9_08"
+author: "Ilana Berlin"
+date: "8 September 2025"
+format: html
+embed-resources: true
+---
+Bar charts are used to see 1-2 categorical variables. 
+
+Explore the `carseats` dataset from the `ISLR2` packages. Install the package in the console, __never__ install in the quarto doc. 
+
+```{r}
+#| message: false
+library(ISLR2)
+library(tidyverse)
+```
+
+Use the `data()` command to view all available datasets
+
+```{r}
+glimpse(Carseats)
+```
+
+Lets look at `SheveLoc` and `USA` 
+
+```{r}
+ggplot(Carseats, aes(x = ShelveLoc, fill = US)) + 
+  geom_bar() + 
+  scale_fill_brewer(palette = "Dark2")
+```
+This plot is good for showing the relative counts of `ShelveLoc`. It also shows the relative proportions of `US` but that is a little more unclear. Switch which is which to change emphasis. 
+
+```{r}
+ggplot(Carseats, aes(fill = ShelveLoc, x = US)) + 
+  geom_bar() + 
+  scale_fill_brewer(palette = "Dark2")
+```
+Let's stress relative proportions with the same data and the same aesthetics. (Change the geom)
+```{r}
+ggplot(Carseats, aes(fill = ShelveLoc, x = US)) + 
+  geom_bar(position = "fill") + 
+  scale_fill_brewer(palette = "Dark2")
+```
+

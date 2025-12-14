@@ -1,0 +1,126 @@
+---
+title: "Class notes 9 26"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(gt)
+```
+
+### The Pipe
+
+The ` %>% ` pipe is from gridr in the tidyverse package. This required the package to work. The `|>` pipe is built in to R. There are slight differences but not for out purposes. The type of pip inserted by CTRL + SHIFT + M can be changed in settings.
+
+## Diamonds Dataset
+
+### More on Grouping 
+
+We can group by variables defined on the fly, do not have to use mutate. 
+Group by big and small as defined by the median value of carats.
+
+```{r}
+#| label: Group on the fly
+
+diamonds %>% 
+  group_by(Large = carat > median(carat)) %>% 
+  summarize(Avg_Price = mean(price)) 
+```
+```{r}
+#| label: ifelse
+diamonds %>% 
+  group_by(ifelse(carat > median(carat),
+                  "Large", "Small")) %>% 
+  summarize(Avg_Price = mean(price)) 
+```
+
+We can group by more than one variable at a time. 
+
+Lets group by size and cut
+
+```{r}
+#| label: Group by multiple
+
+diamonds %>% 
+  group_by(Large = carat > median(carat), 
+           cut) %>% 
+  summarize(Avg_Price = mean(price)) 
+```
+
+Strip grouping with `ungroup`.
+
+Order matters. The first thing in `group_by` is primary and next is secondary. This changes order of columns and the layout of the rows.
+
+```{r}
+#| label: ungroup
+
+diamonds %>% 
+  group_by(cut, 
+          Large = carat > median(carat)) %>% 
+  summarize(Avg_Price = mean(price)) 
+
+```
+
+### Slicing a set
+
+What are the 5 largest diamonds in the dataset and what are the five largest of each cut? 
+
+```{r}
+#| label: Slicing For Largest
+
+diamonds %>% 
+  slice_max(order_by = carat, 
+            n = 5)
+```
+Notice we still have all the variables. We have filtered out some of the observations. There is also a `slice_min` to go with `slice_max`. See `?slice` for more information on slices you can do. 
+
+```{r}
+diamonds %>% 
+  group_by(cut) %>% 
+  slice_max(order_by = carat, 
+            n = 5)
+
+```
+### Grouped mutates and filters
+
+Only keep diamonds that are larger than the median for their cut
+
+- find median of each group
+- get rid of diamonds below the median of their group
+
+to do this 
+
+- group by cut 
+- filter for carat above the median
+```{r}
+diamonds %>% 
+  group_by(cut) %>% 
+  filter(carat > median(carat))
+
+```
+
+
+We can also use columns groupwise using mutate
+
+```{r}
+diamonds %>%
+  group_by(cut) %>% 
+  mutate(med_carat = median(carat)) %>% #repetative but might be useful 
+  select(-c(x,
+            y,
+            z)) %>% 
+  glimpse()
+```
+### Alt text for plots
+
+Adding descriptions to plots. Use alt text using chunk options. Specify plot type, variables involved, and the point of the graph. Do not repeat text already in doc such as title. Nothing changes in the render but it can be heard with audio reader or viewed with inspect. 
+```{r}
+#| fig-alt: bar chart showing that better cuts of diamonds have a higher count
+ggplot(diamonds, aes(x = cut)) +
+  geom_bar()
+```
+

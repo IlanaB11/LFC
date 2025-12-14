@@ -1,0 +1,123 @@
+---
+title: "Class_Notes_09_15"
+format: html
+author: "Ilana Berlin"
+date: "15 Septemeber 2025"
+embed-resources: true
+---
+
+
+
+Use `scooby`
+```{r}
+#| message: false
+#| label: Import and Open
+library("tidyverse")
+library("readxl")
+scooby <- read_excel("scooby.xlsx")
+```
+
+This dataset has a lot of columns
+
+
+```{r}
+#| label: View Number of Columns
+ncol(scooby)
+```
+We do not care about most the of the columns so we can just keep the ones we care about using 'select' from tidyverse. `select` filters columns and `filter` filters rows.
+
+Just keep the first 5 columns using any of the following commands: 
+
+```{r}
+#| label: Using select
+scooby_ff <- select(scooby, 
+                    series_name, network, season, title, imdb)
+
+scooby_ff <- select(scooby, 
+                    1:5) 
+
+scooby_ff <- select(scooby, 
+                    series_name:imdb)
+
+glimpse(scooby_ff)
+```
+
+The most stable way is to specify all column names. Using a range can be subject to change if the dataset changes. Specifying column name also allows us to move around columns in the dataset. 
+
+`select` can also be used to exclude columns using a negative sign. 
+
+```{r}
+#| label: Exclusion using Select
+scooby_ff <- select(scooby, 
+                    -velma_va)
+```
+
+
+If can even be used to reorder a dataset. Use `everything` to import the names of the rest of the columns. When no order is specified that they will be put in in the order that they were in the dataset.
+
+```{r}
+#| label: Reordering using Select
+scooby_reorder <- select(scooby, 
+                         title, velma_va, 
+                         everything())
+```
+
+Other useful commands include `starts_with`, `ends_with`, and `contains`.
+
+```{r}
+#| label: Special commands in select
+scooby_ff <- select(scooby, 
+                    title, network, imdb,
+                    starts_with("snack"))
+
+scooby_ff <- select(scooby, 
+                    title, network, imdb,
+                    ends_with("name"))
+
+scooby_ff <-select(scooby, 
+                   title, network, imdb, 
+                   contains("velma"))
+```
+
+
+### The Pipe
+
+Observations: 
+
+- We often need to do more than one thing to the data. Combine using `select` and `filter`. 
+- Both `select`, `filter`, and many other take the dataset as primary input and return another dataset. 
+
+Take scooby -> select some columns -> filter some observations
+```{r}
+#| label: Select and Filter
+
+scooby_ff <- select(scooby, 
+                    title, network, imdb)
+
+scooby_fff <-filter(scooby_ff, 
+                    network == "CBS")
+```
+
+This works however you have to create an intermediate variable. 
+
+```{r}
+#| label: Select and Filter: No Intermediate
+
+scooby_fff <- filter(select(scooby, 
+                            title, network, imdb), 
+                     network == "CBS")
+```
+
+This looks awful.
+
+R has a unique solution: the pipe. `%>%` CTRL + SHIFT+ M
+```{r}
+#| label: The Pipe
+
+scooby %>% 
+  select(title, network, imdb) %>% 
+  filter(network == "CBS")
+
+```
+
+A sentance with subject, verb, object syntax. Take the scooby dataset and then select the columns and then filter. 

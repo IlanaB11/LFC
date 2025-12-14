@@ -1,0 +1,297 @@
+---
+title: "Final Exam"
+format: html
+embed-resources: true
+code-fold: true
+author: Ilana Berlin
+date: Dec 9 2025
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(gt)
+pressure <- read.csv("pressure.csv")
+college <- read.csv("college.csv")
+billboard <- read.csv("billboard.csv")
+```
+
+The first two problems use the `pressure` data set, the third and fourth use the `college` data set. Problem 5 uses the `billboard` data set from Tidy Tuesday^[[TidyTuesday Github](https://github.com/rfordatascience/tidytuesday/tree/main/data/2025/2025-08-26)]
+
+## Problem 1
+ > Is systolic blood pressure associated with lifestyle (urban/rural/suburban)? Test at significance level  $\alpha = 0.5$ , following all standards and best-practices from class.
+ 
+ $H_0$: Mean systolic blood pressure is the same for all lifestyles. 
+ 
+ $H_a$ Mean systolic blood pressure differs depending on lifestyle. 
+ 
+```{r}
+#| label: blood pressure vs lifestyle graph 
+#| fig-alt: a boxplot showing the distribution of systolic blood pressure by lifestyle
+
+pressure %>% 
+  ggplot(aes(x = lifestyle, 
+             y = systolic, 
+             fill = lifestyle)) + 
+  geom_boxplot(show.legend = FALSE) + 
+  theme_minimal() + 
+  scale_fill_brewer(palette = "Dark2") + 
+  labs(title = "Distribution of Systolic Blood Pressure by Lifestyle", 
+       x = "Lifestyle", 
+       y = "Systolic Blood Pressure") 
+
+```
+
+```{r}
+#| label: blood pressure vs lifestyle anova
+
+blood_life <- aov(systolic ~ lifestyle,
+    data = pressure)
+
+summary(blood_life)
+```
+ The low p-value of less than $2\times10^{-16}$ provides evidence against the null hypothesis. This suggests that systolic blood pressure is not the same for all lifestyles. 
+ 
+```{r}
+TukeyHSD(blood_life)
+```
+The low p-values between all lifestyles in a post-hoc test suggests that all life styles differ from each other. 
+
+## Problem 2 
+>Assume the average systolic blood pressure of all Americans is 128. Does this data provide evidence that Ohioans are different? Test at level  $\alpha = 0.5$, following all standards and best-practices from class.
+
+$H_0: \mu = 128$
+
+$H_a: \mu \ne 128$
+
+The null hypothesis will test if the average systolic blood pressure of Ohioans is consitent with the average systolic pressure of all Americans. The alternative hypothesis is that Ohioans are different than all Americans. 
+
+```{r}
+#| label: Ohioan blood pressure graph 
+#| fig-alt: a histogram of systolic blood pressure with a line marking 128
+
+pressure %>% 
+  ggplot(aes(x = systolic)) + 
+  geom_histogram(bins = 15) + 
+   geom_vline(xintercept = 128, 
+              color = "red") + 
+  theme_minimal() + 
+  labs(title = "Systolic Blood Pressure of Ohioans", 
+       y = 'Count', 
+       x = "Systolic Blood Pressure") 
+
+```
+```{r}
+#| label: blood pressure t test
+
+ t.test(pressure$systolic, 
+       mu = 128)
+```
+The p-value of $0.1743$ supports the null hypothesis. This suggests that the average systolic blood pressure of Ohioans is consistent with the average systolic blood pressure of all Americans. 
+
+## Problem 3 
+> Is there evidence that acceptance rate (the fraction of applications accepted) is a statistically significant explainer of graduation rate? Test at level $\alpha = 0.5$, following all standards and best-practices from class.
+
+$H_0$: There is __not__ a linear relationship between acceptance rate and graduation rate. 
+
+$H_a$: There is a linear relationship between acceptance rate and graduation rate. 
+
+```{r}
+#| label: acceotance rate vs graduation rate graph 
+#| fig-alt: a scatterplot of accpetance rate vs graduation rate
+#| warning: false
+
+college <- college %>% 
+  mutate(Accept.Rate = round(Accept/Apps, 2) * 100)
+
+college %>% 
+  ggplot(aes(x = Accept.Rate, 
+             y = Grad.Rate)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", 
+              se = FALSE) + 
+  theme_minimal() + 
+  labs(title = "Acceptance Rate vs Graduation Rate", 
+       x = "Acceptance Rate", 
+       y = "Graduation Rate")
+
+```
+
+```{r}
+#| label: acceptance graduation linear fit
+
+accept_grad_lm <- lm( Grad.Rate ~ Accept.Rate, 
+                      data = college)
+
+summary(accept_grad_lm)
+```
+The small p-value of less than $2 \times 10^{-16}$ provides evidence against the null hypothesis. This suggest that acceptance rate has a linear relationship to graduation rate. The equation of the regression line is `Grad.Rate` $= 91.5509 - 0.3443$(`Accept.Rate`)
+
+## Problem 4 
+> Obtain a parallel-slopes model for graduation rate using acceptance rate and public/private as explainers. Write the model equation, clearly explaining the meaning of each coefficient. Include a relevant plot. What graduation rate does this model predict for a private college with acceptance rate of 85%?
+
+```{r}
+#| label: acceptance rate vs graduation rate public private graph 
+#| fig-alt: a scatterplot of accpetance rate vs graduation rate divided by public and private 
+#| warning: false
+
+college %>% 
+  ggplot(aes(x = Accept.Rate, 
+             y = Grad.Rate, 
+             color = Private)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", 
+              se = FALSE) + 
+  theme_minimal() + 
+  labs(title = "Acceptance Rate vs Graduation Rate", 
+       x = "Acceptance Rate", 
+       y = "Graduation Rate") + 
+  scale_color_brewer(palette = "Dark2")
+```
+```{r}
+#| label: acceptance rate vs graduation rate public private parallel slopes model
+
+accept_grad_para <- lm( Grad.Rate ~ Accept.Rate + Private, 
+                      data = college)
+
+summary(accept_grad_para)
+
+```
+The equation of the parallel slopes regression line is Grad.Rate $= 84.1912 - 0.3872$(`Accept.Rate`)$+14.7246$(`PrivateYes`) where `PrivateYes` is 1 if the college is private and 0 is the college is public. This predicts that a private college with an acceptance rate of 85\% will have a graduation rate of 66\%. 
+
+```{r}
+#| label: parallel prediction
+#| eval: false
+#| include: false
+
+predict(accept_grad_para, 
+        data.frame(Accept.Rate = 85, Private = "Yes"))
+```
+
+## Problem 5 
+> Following all best-practices from our data project and other work, identify an interesting pattern and investigate it. This analysis should include ~150 words of text, two attractive visualizations, a table, and at least one relevant outside link (as a footnote) beyond the source of the data. As part of your work, pick one song and consider its relationship to the others, pointing it out in at least one of your plots. Other than the `annotate` function, do not use syntax from outside of class in your work.
+
+Artist's who write their own songs are often more popular. Audiences feel like they are more connected to the artist and artist feel they have more control over their work.^[[Songwriting in Pop Music](https://machronicle.com/the-era-of-songwriting-in-pop-music/)] How is this reflected in chart topping songs?
+
+Taylor Swift is a good example of an artist who gained popularity for writing her own songs. I am not the biggest Taylor Swift fan however I remember how often Shake It Off was played, and how before playing it radio hosts would like about how she wrote it about the media attention she was getting.^[[What is Shake It Off by Taylor Swift About](https://en.wikipedia.org/wiki/Shake_It_Off)]
+
+```{r}
+#| label: select data 
+
+billboard <- billboard %>% 
+  select(song, 
+         artist, 
+         date, 
+         weeks_at_number_one, 
+         songwriters, 
+         artist_is_a_songwriter, 
+         artist_is_only_songwriter
+         ) %>% 
+  mutate(date = as.numeric(substr(date, 1, 4)), 
+         artist_is_a_songwriter = as.logical(artist_is_a_songwriter), 
+         artist_is_only_songwriter = as.logical(artist_is_only_songwriter))
+```
+
+```{r}
+#| label: song histogram
+#| fig-alt: a histogram showing the number of songs that made it to the top of the billboard top 100 each year and if the artist was a songswriter 
+#| warning: false
+
+billboard %>% 
+  ggplot(aes(x = date, 
+             fill = artist_is_a_songwriter)) + 
+  geom_histogram(binwidth = 2) + 
+  theme_minimal() + 
+  scale_fill_brewer(palette = "Dark2") + 
+
+    labs(x = "Year", 
+       y = "Count", 
+       fill = " Artist is a Songwriter", 
+       title = "Top Song Written by Artist per Year") +
+  annotate(geom = "text", 
+           x = 2014, 
+           y = 62, 
+           label = "Shake It Off", 
+           xmin = 2005, 
+           xmax = 2015) + 
+  annotate(geom = "curve",
+           x = 2014, 
+           y = 60, 
+           xend = 2014, 
+           yend = 20, 
+           arrow = arrow())
+```
+
+```{r}
+#| label: writting trends 
+#| fig-alt: a scatter plot with a trend lines showing the different ways popular songs have been written
+#| warning: false
+
+billboard %>% 
+  summarize(date, 
+            songwriter = case_when(
+              artist_is_only_songwriter & artist_is_only_songwriter ~ "Written by Just the Artist", 
+              artist_is_a_songwriter & !artist_is_only_songwriter ~ "Cowritten with Artist", 
+              .default = "Not Written by Artist"
+            )) %>% 
+  group_by(date, 
+           songwriter) %>% 
+  summarise(count = n()) %>%
+  ungroup() %>% 
+  ggplot(aes(x = date, 
+             y = count, 
+             color = songwriter)) + 
+  geom_point(alpha = 0.5) + 
+  geom_smooth(se = FALSE, 
+             linewidth = 1.5) + 
+  theme_minimal() + 
+  scale_color_brewer(palette = "Dark2") + 
+  labs(title = "Who Writes the Top Songs?", 
+       x = "Year", 
+       y = "Number of Songs", 
+       color = "Writers") + 
+  annotate(geom = "text", 
+           x = 2014, 
+           y = 18, 
+           label = "Shake It Off", 
+           xmin = 2003, 
+           xmax = 2015) + 
+  annotate(geom = "curve",
+           x = 2014, 
+           y = 17, 
+           xend = 2014, 
+           yend = 10.5, 
+           arrow = arrow())
+```
+
+Over time, more artist have helped write their own songs but less artists have been the sole writer of their own songs. Two immediate causes come to mind.
+
+1. The music industry realized that audiences prefer when artist write their own songs and startted attributing more music to their artists (no matter how much or how little they wrote)
+
+2. More people who actually helped write songs got the credit they deserved for writing 
+
+Drawing any conclusions would require further investigations outside of this project. 
+
+Despite have many popular songs that she wrote herself^[[Songs Written By Taylor Swift](https://www.businessinsider.com/taylor-swift-solo-written-songs)], all of Taylor Swift's chart topping songs were co written. 
+
+```{r}
+#| label: taylor swift
+billboard %>% 
+  filter(artist == "Taylor Swift") %>% 
+  select(Year = date, 
+         Song = song, 
+         Writers = songwriters, 
+         "Weeks at the Top" = weeks_at_number_one) %>% 
+  gt() %>% 
+  tab_header(title = "Taylor Swift Chart Topping Songs", 
+             subtitle = "All are made in collaborative with other writers")
+```
+
+I think this show collaborative the process or making music can be, that an artist's most popular songs where made with other people. 
+
+## Problem 6 
+> Create a new GitHub repo that includes only your findings from problem 5. This will entail creating a new project and smaller standalone .qmd document. Include a clickable link to this repo in the work that you submit via moodle.
+
+[My Github](https://github.com/IlanaB11/My-TidyTuesday/tree/main)

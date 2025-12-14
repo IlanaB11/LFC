@@ -1,0 +1,89 @@
+---
+title: "Class Notes 9_19"
+format: html
+date: 19 Sept 2025
+author: Ilana Berlin
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(modeldata)
+```
+
+```{r}
+#| warning: false
+#| label: d15N Boxplot
+
+
+ggplot(scat, aes(y= Species, 
+                 x = d15N, 
+                 fill = Species)) + 
+  geom_boxplot(outlier.shape = NA, 
+               show.legend = FALSE) + 
+  geom_jitter(alpha = 0.5, 
+              show.legend = FALSE) + 
+  theme_minimal() + 
+  scale_fill_brewer(palette = "Dark2")
+```
+Warning: There are 2 missing values excluded from the graph that have not been explored. 
+
+### Arranging a Dataset by a Variables
+
+arrange the `scat` dataset by the variable `d15N` with the lowest value at the top and the highest value at the bottom. use the `head` command to only show the first few rows. 
+```{r}
+#| label: Arrange by d15N low to high
+scat %>% 
+  select(Species, 
+         Site, 
+         d15N) %>% 
+  arrange(d15N) %>% 
+  head()
+  
+```
+
+make the variable descend from high to low with `desc()`. This also works alphabetically with strings. 
+```{r}
+#| label: Arrange by d15N high to low
+scat %>% 
+  select(Species, 
+         Site, 
+         d15N) %>% 
+  arrange(desc(d15N)) %>% 
+  head()
+```
+When arranging by multiple factors, the secondary variable is sorted within the primary variable. 
+```{r}
+#| label: Arrange by d15N and location
+scat %>% 
+  select(Species, 
+         Site, 
+         Location,
+         d15N) %>% 
+  arrange(Location, 
+          d15N)
+```
+
+### Adding and Modifying Columns
+
+use the `mutate` command add or modify columns in the dataset. 
+
+Add a column called `shape` that is the ratio of `diameter` to `length` in the `scat` dataset. 
+
+```{r}
+#| label: Using Mutate
+
+scat %>% 
+  select(Species, 
+         Diameter,
+         Length) %>% 
+  mutate(Shape = round(Diameter / Length, 2) ) %>% 
+  head()
+
+```
+We can also use this to change existing  columns by specifying a name that already exists. 
+
+`arrange` always gives back a set with the same dimesions as the orgional set. `mutate` aways has the same number of rows but possibly more columns. `filter` leaves the columns the same but changes the number of rows. `select` changes the number of columns but keeps the same number of rows. 

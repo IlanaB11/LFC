@@ -1,0 +1,45 @@
+---
+title: "Class_Notes_9_17"
+format: html
+author: "Ilana Berlin"
+date: "17 September 2025"
+embed-resources: true
+---
+```{r}
+#| label: Import Libs
+#| message: false
+
+library(tidyverse)
+```
+
+### Filtering `NA`s
+
+The `penguines` dataset include some missing values, these can make things complicated. 
+
+How many `bill_len` values are missing? 
+```{r}
+#| label: Missing Bill Length
+
+sum(is.na(penguins$bill_len)) 
+mean(is.na(penguins$bill_len))
+```
+There are 2 missing values (`sum`) or 0.6% (`mean`). Lets filter the dataset to just keep the missing values. The obvious thing, filtering for `bill_len == NA`, does not work. Use `is.na` instead. 
+
+```{r}
+#| label: Keep Missing Values
+
+penguins %>% 
+  filter(is.na(bill_len))
+
+```
+
+To keep non missing value using the not operator `!`.
+```{r}
+#| label: Keep Non Missing Values
+#| include: false
+
+penguins %>% 
+  filter(!is.na(bill_len))
+```
+
+

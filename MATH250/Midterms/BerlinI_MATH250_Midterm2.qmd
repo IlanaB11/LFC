@@ -1,0 +1,218 @@
+---
+title: "Midterm 2"
+format: html
+author: Ilana Berlin
+date: November 16 2025
+embed-resources: true
+code-fold: true
+navbar:
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(readxl)
+library(gt)
+summer_school <- read.csv("summer_school.csv")
+cupid <- read.csv("cupid.csv")
+```
+
+## Problem 1
+
+> Tidying the data as needed, recreate the following plot as closely as possible.
+
+```{r}
+#| label: grade plot
+#| fig-alt: a bar chart showing the frequency of different letter grades 
+
+summer_tidy <- summer_school %>% 
+  pivot_longer(c(term1, term2), 
+               names_to = "Term", 
+               names_prefix = "term",
+               values_to = "grade", 
+               values_drop_na = TRUE)
+
+summer_tidy %>% 
+  ggplot(aes(x = grade, 
+             fill = grade)) +
+  geom_bar(show.legend = FALSE) +
+  theme_minimal() + 
+  scale_fill_brewer(palette = "Dark2") + 
+  labs(x = "Letter Grade", 
+       y = "Frequency", 
+       title = "Making the grade", 
+       caption = "Source:grades.xlsx")
+
+```
+
+
+## Problem 2
+
+> The high school claims that the average GPA of students taking summer school classes is 3.1. Is this claim reasonable in light of this sample data? Follow all best practices from class.
+
+$H_0$: The average GPA of students taking summer school classes is 3.1
+
+$H_a$: The average GPA of students taking summer school classes is _not_ 3.1 
+
+```{r}
+#| label: gpa plot
+#| fig-alt: a plot showing the gpa of students taking summer school classes
+
+summer_school %>% 
+  ggplot(aes(x = gpa)) + 
+  geom_histogram(binwidth = 0.1) + 
+  geom_vline(xintercept = 3.1, 
+             color = "red") + 
+  theme_minimal() +
+  labs(x = "GPA", 
+       y = "Count", 
+       title = "GPA of Summer School Student")
+  
+```
+```{r}
+#| label: gpa t test
+
+t.test(summer_school$gpa, 
+       mu = 3.1 )
+```
+If the average GPA claimed by the high school is true, then data such as the sample data above would appear around 36.5% of the time. There is not enough evidence to reject the claim of the high school. In light of our data, it would be reasonable to say that the average GPA of student who take summer school classes is 3.1. 
+
+## Problem 3 
+
+> Recreate the following table as closely as possible. 
+
+```{r}
+summer_tidy %>% 
+  group_by(Term) %>% 
+  summarise(Number= n(), 
+            "DF Rate" = sum(grade %in% c("D","F"))/ n() ) %>% 
+  gt()
+```
+
+
+
+## Problem 4 
+
+> Does it seem that body type and drug use are related? Consider only the five most common body types and only people that answered these questions. Generate a plot and a table, both useful and attractive, then write a few sentences explaining your findings and reasoning.
+
+```{r}
+
+#| label: drug body type figure
+#| fig-alt: a bar chart showing the drug use of people with different body types 
+
+
+top_body <- cupid %>% 
+  filter(!is.na(body_type)) %>% 
+  group_by(body_type) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  head(n = 5) %>% 
+  pull(body_type)
+
+
+cupid_body_drug <- cupid %>% 
+  filter(body_type %in% top_body, 
+         !is.na(drugs)) 
+
+cupid_body_drug %>% 
+  ggplot(aes(x = body_type, #order by frequency - claude
+             fill = drugs)) +
+  geom_bar(position = 'fill') + 
+  theme_minimal() + 
+  scale_fill_brewer(palette = "Dark2") + 
+  labs(x = "Body Type", 
+       y = "Frequency", 
+       fill = "Drug Use", 
+       title = "Drug Use of Different Body Type", 
+       caption = "Source: OkCupid")
+
+```
+```{r}
+#| label: drug body type table 
+#| warning: false
+cupid_body_drug %>% 
+  group_by(body_type, 
+           drugs) %>% 
+  summarise(count = n()) %>% 
+  mutate(percent = round(count/ sum(count), 3) * 100) %>% 
+  gt(row_group_as_column = TRUE) %>% 
+  tab_header(title = "Drug use by Body Type")
+
+```
+
+Drug use seems to be unrelated to body type. Around 10-20% of people within each body type sometimes do drugs. People who are thin do drugs slightly more frequently than other body types which I find interesting as studies have shown that drugs can affect metabolism and often lead to an increase in weight.^[[Verhaegen AA, Van Gaal LF. _Drugs That Affect Body Weight, Body Fat Distribution, and Metabolism_ __2019__](https://www.ncbi.nlm.nih.gov/books/NBK537590/)]
+
+## Problem 5 
+
+> According to Gallup, 3.4% of U.S. adults identify as gay and 5.2% identify as bisexual. Assume the remaining 91.4% are straight (which isn’t really true). Is the `cupid` data set consistent with this information? Follow all best practices from class.
+
+$H_0$: The ratios of sexual orientation match the claims made by Gallup, so 3.4% of adults are gay, 5.2% are bisexual, and 91.4% are straight. 
+
+$H_a$: The ratios of sexual orientation do not match the claims made by Gallup 
+
+```{r}
+#| label: sexual oritentation figure
+#| fig-alt: a plot showing the distribution of sexual oritentations in a data set from OKcupid
+
+cupid %>% 
+  ggplot(aes(x = orientation)) +
+  geom_bar() +
+  theme_minimal() + 
+  labs(x = "Sexual Orientation", 
+       y = "Count", 
+       title = "Sexual Orientation of OkCupid Users")
+```
+```{r}
+#| label: sexual orientation chi squared
+
+table <- table(cupid$orientation)
+chisq.test(table, 
+           p = c(0.052, 0.034, 0.914))
+
+```
+There is a $2.2\times10^{-16}$ chance of getting data like the sample data above if the ratios reported by Gallup are accurate. The data from OkCupid is not consistent with the claims made by Gallup. 
+
+## Problem 6 
+
+> Use `separate`, `case_when`, and core tools from class to obtain accurate counts of various individual ethnicities represented in this data set. Generate an attractive plot showing the 6 most common responses.
+
+```{r}
+#| label: cupid ethic
+#| fig-alt: a bar chart showing ethnicities of people on ok cupid
+
+cupid_long <- cupid %>% 
+  filter(!is.na(ethnicity)) %>% 
+ separate_longer_delim(ethnicity, #from the tidyr package
+                       delim = ',') %>% 
+  mutate(ethnicity = str_squish(ethnicity)) #remove whitespace (from stringr)
+
+top_eth <- cupid_long %>% 
+  group_by(ethnicity) %>% 
+  summarise(count = n()) %>% #this feels wrong - people are being double counted
+  arrange(desc(count)) %>% 
+  head(n=6) %>% 
+  pull(ethnicity)
+
+cupid_long %>% 
+  mutate( ethnicity = case_when(
+    ethnicity %in% top_eth ~ ethnicity,
+    .default = "other" #set to other when not in the top 6
+  )) %>% 
+  group_by(ethnicity) %>% 
+  summarise(count = n()) %>% #this feels wrong - people are being double counted
+  arrange(desc(count)) %>% 
+  slice_head(n = 6) %>% 
+  ggplot(aes(x = fct_reorder(ethnicity, desc(count)) %>% 
+                               fct_relevel("other", after = Inf), #move other to the end with help from claude
+             fill = ethnicity, 
+             y = count)) + 
+  geom_col(show.legend = FALSE) +
+  theme_minimal() + 
+  scale_fill_brewer(palette = "Dark2") + 
+  labs(x = "Ethnicity", 
+       y = "Count", 
+       title = "Top 6 Ethnicities on OkCupid")
+```
+

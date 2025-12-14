@@ -1,0 +1,62 @@
+---
+title: "Class_notes_9_24"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+```
+
+### More about `group_by` and `summarize`
+
+Look at `ggplot2::diamonds` (package::function) and get some grouped summaries. Lets find how `price` varies by `cut`. Use count  `n()` to see how datapoints there are in each group. (best practice)
+
+```{r}
+#| label: Group by Diamonds
+
+diamonds %>% 
+  group_by(cut) %>% 
+  summarize(avg_price = mean(price), 
+            avg_carat = mean(carat), 
+            count = n())
+
+
+```
+ ### Great table (`gt`)
+
+Use `gt::gt` to make tables. 
+ 
+```{r}
+#| label: Using gt
+
+diamonds %>% 
+  group_by(cut) %>% 
+  summarize(avg_price = mean(price), 
+            avg_carat = mean(carat), 
+            count = n()) %>% 
+  gt::gt() #only load the gt function for the package
+
+```
+ The `gt` package allows for a lot of customization. Use `?gt` to view the help files for ideas. 
+ 
+ 
+### Counting Observations 
+
+You can use `count()` as shortcut instead of using `n()` for the counts
+
+```{r}
+#| label: Count
+
+diamonds %>% 
+  count(cut) %>% 
+  gt::gt()
+```
+
+
+
+ 
+

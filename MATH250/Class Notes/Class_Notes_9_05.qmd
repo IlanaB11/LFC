@@ -1,0 +1,70 @@
+---
+title: "Class_Notes_09_05"
+format: html
+editor: visual
+embed-resources: true
+---
+
+YML Header: Yet Another Markdown Language Use Source to view document as a markdown file - Visual make it look like render
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** (\*\* or \_\_ for **bold** and \* or \_ for *italic*) button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+Embedded with: ''' {language} - good way to combine R and Python
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+Use the echo command to remove the display of the code
+
+A comment w/ instructions for quarto (hash-pipe #\|)
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `#| echo: false` option disables the printing of code (only output is displayed). You can also use ``` #|``include: False ``` to run code without showing the output ``` #|``eval: False ``` To show code without running it - good to show errors. (The space between `#|` and the command is necessary.
+
+Use \` around code to get "typewriter effect"
+
+Insert new code block with Insert: Executable Cell
+
+Rendering does not work unless libraries are in the doc - starts from a new session
+
+Load `tidyverse` but silence the message
+
+```{r}
+#| message: false
+library(tidyverse)
+glimpse(penguins)
+```
+
+**Never** Include interactive commands (ex/ `View` or `install.packages`) in a Quarto document
+
+## Box Plots
+
+Make a box plot showing `bill_len` by `species`
+
+```{r}
+#| warning: false
+ggplot(penguins, aes(
+  x = bill_len, 
+  y = species
+)) + 
+  geom_boxplot() + 
+  theme_minimal()
+
+```
+
+Error from NA values: Silence with `#| warning: false`
+
+Still admit that missing data is dropped - self written warning: Ex/ Two observation were missing data and should be investigated

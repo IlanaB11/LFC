@@ -1,0 +1,77 @@
+---
+title: "Class_Notes_09_10"
+format: html
+author: "Ilana Berlin"
+date: "10 September 2025"
+embed-resources: true
+---
+```{r}
+#| label: LoadLibs
+#| message: false
+library(tidyverse)
+
+```
+
+use `#| label` to name chucks and maintain internal organization 
+
+## Faceting
+
+Break down `penguins` bill length and bill depth by species. 
+
+```{r}
+#| label: Facet_wrap
+#| warning: false
+ggplot(penguins, aes(x = bill_len,
+                     y = bill_dep)) +
+  geom_point() + 
+  facet_wrap(~species, 
+             ncol = 1)
+
+```
+
+`facet_wrap` create a new subplot for each variable but uses the same range for each axis. Use `nrow` and `ncol` to specify layout.
+
+Improve the visuals:
+```{r}
+#| label: Facet_map(goodvis)
+#| warning: false
+ggplot(penguins, aes(x = bill_len,
+                     y = bill_dep, 
+                     color = species)) +
+  geom_point() + 
+  facet_wrap(~species, 
+             ncol = 1) + 
+  labs(x = 'Bill Length (mm)', 
+       y = 'Bill Depth (mm)', 
+       color = 'Species',
+       title = "Penguin Bill Dimensions",
+       caption = "Palmer Station Antarctica LTER and K. Gorman (2020)") + 
+  scale_color_brewer(palette = 'Dark2') + 
+  theme_minimal() + 
+  theme(strip.text = element_blank()) # or theme(legend.position = "none") to remove legend
+
+```
+Note: There is missing data about 2 penguines 
+
+
+Always use `scale_color` or `scale_fill` with palettes `viridis` or `Dark2` to make plots more colorblind friendly. 
+
+Compare `sex`. This is not a good plot, only for example. 
+
+```{r}
+#| label: facet_sex
+#| warning: false
+ggplot(penguins, aes(x = bill_len,
+                     y = bill_dep, 
+                     color = sex)) +
+  geom_point() + 
+  facet_wrap(~species, ncol = 1) + 
+  labs(x = "Bill Depth (mm)", 
+       y = "Bill Length", 
+       color = 'Sex') + 
+  scale_color_brewer(palette = 'Dark2') +
+  theme_minimal()
+
+
+```
+Consider if all variables present in the graph are necessary. 

@@ -1,0 +1,41 @@
+---
+title: "Class Notes 10.8"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+```
+
+Include an image in a quarto doc, the label serves as alt text. 
+
+![dumpster garden fire image](dumpster_fire.jpeg) 
+Include footnotes like this^[footnote]. Use this to cite the tidy tuesday source as well as two additional sources for the project. 
+
+### Project planning 
+
+1) Generate __lots__ of ideas: make a lot of plots and summaries but also learn more about the data and about color. Think about these
+
+2) Remove ideas that are too difficult or too basic and start doing some further exploring into your top ideas. 
+
+### Pivoting 
+
+`pivot_longer` handles columns that have names that are actually an unamed variable. consider `billboard` as an example. Convert the `wk` column using `pivot_longer`
+
+```{r}
+
+billboard_tidy <- billboard %>% 
+  pivot_longer(cols = starts_with("wk"), 
+               names_to = "week", 
+               values_to = "rank", 
+               values_drop_na = TRUE, 
+               names_prefix = "wk", 
+               names_transform = as.numeric)
+```
+
+### Splitting combined cells 
+When I column contains more than 1 variable. The simplest tool is `separate`. 

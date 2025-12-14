@@ -1,0 +1,59 @@
+---
+title: "Class notes 10.29"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+```
+
+### T-test
+
+Consider the `penguins` bill length. This is just a sample, it it not all of the penguins in the world, not even all the penguins in Antarctica
+
+```{r}
+#| label: sample mean
+mean(penguins$bill_len, 
+     na.rm = TRUE)
+```
+This is a sample mean. We are not saying this is the average for all penguins. Is it plausible if a field guide says that the average bill length of penguins in the area is 43? 
+
+```{r}
+#| label: rough hist
+penguins %>% 
+  ggplot(aes(x = bill_len)) + 
+  geom_histogram() + 
+  geom_vline(xintercept = 43) 
+```
+Visually, out distributions to the right of 43. We can quantify how far with a __T-test__. This will measure the difference between the statistic value we got (43.92) and the value predicted (43). We are testing if a _single value_ is plausible (null hypothesis). 
+
+Always start by explicitly stating the hypothesis. 
+
+Null hypothesis: $H: \mu = 43$
+
+Alternative: $H_a: \mu \ne 43$ (two sided alternative)
+
+Best practice: include visual for hypothesis after writing hypothesis so hypothesis is not influenced
+
+```{r}
+#| label: t-test
+
+t.test(penguins$bill_len, #data
+       mu = 43) #null hypothesis
+```
+
+The __p-value__ measures the probability of getting an $\bar{x}$ this far away from the null hypothesis $\mu$ by random chance if the null is true. The smaller p-value, the stronger the evidance against the null. 
+
+In this case the p-value of `0.001944` means that data like ours with only occur 0.01944% of the time when we gather a sample of this size. If the null hypothesis is right, it would be rare to get data like ours. It makes sense to conclude that the null hypothesis is wrong here so we reject it and conclude that $\mu \ne 43$. 
+
+Conclusion in words: The average length of penguin bills is not 43mm. 
+
+_Note: only use a hypothesis test if you only want to consider a single possible parameter value._ If you just want to make a statement about the parameter based on your data (a more common thing to do), use a __confidence interval__ which is also given by `t.test`. Control the size of the confidence interval with `conf.level`. T-test does not assume knowledge of population standard deviation (z) because we never know the population standard deviation.  
+
+
+
+
