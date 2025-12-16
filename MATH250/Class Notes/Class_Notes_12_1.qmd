@@ -81,15 +81,6 @@ The term `temp:species0. niveus` is the new term. However, this is over fitting 
 AI is usually pretty bad at doing typical things computers are good at like math. So lets make it use a calculator
 
 ```{r}
-#| include: false
-
-Sys.setenv(
-  GEMINI_API_KEY = "AIzaSyCtyfK1syWoeVjcniLc747LAfOeBwQCHZU")
-
-```
-
-
-```{r}
 
 my_gemini <- chat_google_gemini(system_prompt = "you are a friendly but terse R assistant who prefers to give short answers in a simple tidyverse format")
 
